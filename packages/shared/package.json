@@ -1,0 +1,12 @@
+{
+  "name": "@packages/shared",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "firebase": "^11.1.0",
+    "zustand": "^5.0.2"
+  }
+}
