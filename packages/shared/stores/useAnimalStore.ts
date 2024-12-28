@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { IAnimal } from "../models";
-import { col_animals, db } from "../../services/firebaseConfig";
+import { col_animals, db } from "../services/firebase/firebase";
 import { addDoc, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 import { Animal } from "../classes";
 
