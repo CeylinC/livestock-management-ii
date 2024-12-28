@@ -1,7 +1,7 @@
 import { addDoc, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 import { IBarn } from "../models/IBarn";
 import { create } from "zustand";
-import { col_barns, db } from "../../services/firebaseConfig";
+import { col_barns, db } from "../services/firebase/firebase";
 import { Barn } from "../classes";
 
 interface BarnState {

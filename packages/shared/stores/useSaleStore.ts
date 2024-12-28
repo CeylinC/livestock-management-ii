@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { ISale } from "../models";
 import { addDoc, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
-import { col_sales, db } from "../../services/firebaseConfig";
+import { col_sales, db } from "../services/firebase/firebase";
 import { Sale } from "../classes";
 
 interface SaleState {

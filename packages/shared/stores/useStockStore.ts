@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { IStock } from "../models";
 import { getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { col_stocks, db } from "../../services/firebaseConfig";
+import { col_stocks, db } from "../services/firebase/firebase";
 import { Stock } from "../classes";
 
 interface StockState {
