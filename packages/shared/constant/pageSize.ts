@@ -1,2 +1,2 @@
-export const webPageSize = 3;
-export const mobilePageSize = 12;
+export const webPageSize = 15;
+export const mobilePageSize = 8;

@@ -82,7 +82,7 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
       temp.push(new Animal({ ...doc.data(), id: doc.id }));
       lastDataCreateAt = doc.data().createdAt;
     });
-    console.log(lastData)
+    
     set(() => ({ animals: temp, lastData: lastDataCreateAt }));
   },
 
