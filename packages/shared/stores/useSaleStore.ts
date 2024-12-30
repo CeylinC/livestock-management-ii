@@ -1,13 +1,17 @@
 import { create } from "zustand";
 import { ISale } from "../models";
-import { addDoc, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import { addDoc, deleteDoc, doc, getDocs, limit, orderBy, query, startAfter, updateDoc } from "firebase/firestore";
 import { col_sales, db } from "../services/firebase/firebase";
 import { Sale } from "../classes";
 
 interface SaleState {
   sales: ISale[];
   selectedSale: ISale | null;
+  totalCount: number;
+  lastData: any | null;
   getSales: () => void;
+  fetchInitialData: (pageSize: number) => void;
+  fetchPage: (pageSize: number, pageNumber: number) => void;
   setSale: (sale: ISale) => void;
   updateSale: (sale: ISale) => void;
   deleteSale: (saleId: string) => void;
@@ -17,6 +21,8 @@ interface SaleState {
 export const useSaleStore = create<SaleState>((set, get) => ({
   sales: [],
   selectedSale: null,
+  totalCount: 0,
+  lastData: null,
 
   getSales: async () => {
     const temp: ISale[] | null = [];
@@ -27,6 +33,51 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     });
 
     set(() => ({ sales: temp }));
+  },
+
+  fetchInitialData: async (pageSize: number) => {
+    const temp: ISale[] | null = [];
+    const ss = await getDocs(col_sales);
+    let lastDataCreateAt: any;
+
+    const q = query(col_sales, orderBy("createdAt", "desc"), limit(pageSize));
+    const qs = await getDocs(q);
+    qs.forEach((doc) => {
+      temp.push(new Sale({ ...doc.data(), id: doc.id }));
+      lastDataCreateAt = doc.data().createdAt;
+    });
+
+    set(() => ({
+      totalCount: ss.size,
+      sales: temp,
+      lastData: lastDataCreateAt,
+    }));
+  },
+
+  fetchPage: async (pageSize: number, pageNumber: number) => {
+    const { lastData } = get();
+    const temp: ISale[] = [];
+    let q: any;
+    let lastDataCreateAt: any;
+
+    if (pageNumber === 1) {
+      q = query(col_sales, orderBy("createdAt", "desc"), limit(pageSize));
+    } else {
+      q = query(
+        col_sales,
+        orderBy("createdAt", "desc"),
+        startAfter(lastData),
+        limit(pageSize)
+      );
+    }
+    const qs = await getDocs(q);
+    qs.forEach((doc) => {
+      const data = doc.data() as ISale;
+      temp.push(new Sale({ ...data, id: doc.id }));
+      lastDataCreateAt = data.createdAt;
+    });
+
+    set(() => ({ sales: temp, lastData: lastDataCreateAt }));
   },
 
   setSale: async (sale) => {
@@ -43,9 +94,10 @@ export const useSaleStore = create<SaleState>((set, get) => ({
       contact: sale.contact,
       paymentState: sale.paymentState,
       paymentDate: sale.paymentDate.toString(),
+      createdAt: new Date(),
     });
 
-    set(() => ({ sales: [...sales, { ...sale, id: data.id }] }));
+    set(() => ({ sales: [{ ...sale, id: data.id }, ...sales] }));
   },
 
   updateSale: async (sale) => {

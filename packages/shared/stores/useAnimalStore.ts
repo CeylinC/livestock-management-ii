@@ -26,7 +26,6 @@ interface AnimalState {
   updateAnimal: (animal: IAnimal) => void;
   deleteAnimal: (animalId: string) => void;
   selectAnimal: (animal: IAnimal | null) => void;
-  clearAnimals: () => void;
 }
 
 export const useAnimalStore = create<AnimalState>((set, get) => ({
@@ -58,13 +57,17 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
       lastDataCreateAt = doc.data().createdAt;
     });
 
-    set(() => ({ totalCount: ss.size, animals: temp, lastData: lastDataCreateAt }));
+    set(() => ({
+      totalCount: ss.size,
+      animals: temp,
+      lastData: lastDataCreateAt,
+    }));
   },
 
   fetchPage: async (pageSize: number, pageNumber: number) => {
     const { lastData } = get();
-    const temp: IAnimal[] | null = [];
-    let q;
+    const temp: IAnimal[] = [];
+    let q: any;
     let lastDataCreateAt: any;
 
     if (pageNumber === 1) {
@@ -79,10 +82,11 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     }
     const qs = await getDocs(q);
     qs.forEach((doc) => {
-      temp.push(new Animal({ ...doc.data(), id: doc.id }));
-      lastDataCreateAt = doc.data().createdAt;
+      const data = doc.data() as IAnimal;
+      temp.push(new Animal({ ...data, id: doc.id }));
+      lastDataCreateAt = data.createdAt;
     });
-    
+
     set(() => ({ animals: temp, lastData: lastDataCreateAt }));
   },
 
@@ -100,7 +104,7 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
       createdAt: new Date(),
     });
 
-    set(() => ({ animals: [...animals, { ...animal, id: data.id }] }));
+    set(() => ({ animals: [{ ...animal, id: data.id }, ...animals] }));
   },
 
   updateAnimal: async (animal) => {
@@ -133,9 +137,5 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({
       selectedAnimal: animal,
     }));
-  },
-
-  clearAnimals: () => {
-    set(() => ({ animals: [] }));
   },
 }));

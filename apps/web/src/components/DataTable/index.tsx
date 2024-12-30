@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, TableProps } from 'antd';
 import { IProp } from './_type';
+import { webPageSize } from '@packages/shared/constant';
 
 
 export default function DataTable<T>({ columns, data, onClickRow, handlePageChange, totalCount }: IProp<T>) {
@@ -15,7 +16,7 @@ export default function DataTable<T>({ columns, data, onClickRow, handlePageChan
                       onClick: () => onClickRow(record as TableProps<T>),
                     };
                   }}
-                pagination={{total: totalCount, onChange: handlePageChange, pageSize: 3}}
+                pagination={{total: totalCount, onChange: handlePageChange, pageSize: webPageSize}}
             />
         </>
     );
