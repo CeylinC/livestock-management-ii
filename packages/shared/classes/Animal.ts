@@ -1,7 +1,7 @@
 import { Dayjs } from "dayjs";
 import { gender } from "../enums";
 import { IAnimal } from "../models";
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 export class Animal implements IAnimal {
   id: string;

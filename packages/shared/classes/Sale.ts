@@ -1,7 +1,6 @@
-import { Dayjs } from "dayjs";
-import { saleCategory } from "../enums";
+import dayjs, { Dayjs } from "dayjs";
+import { paymentState, saleCategory } from "../enums";
 import { ISale } from "../models";
-import dayjs = require("dayjs");
 
 export class Sale implements ISale {
   id: string;
@@ -13,7 +12,7 @@ export class Sale implements ISale {
   saleDate: Dayjs;
   recipientName: string;
   contact: string;
-  paymentState: string;
+  paymentState: paymentState;
   paymentDate: Dayjs;
 
   constructor(data?: any) {
