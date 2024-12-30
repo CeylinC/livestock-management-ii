@@ -3,7 +3,7 @@ import { Table, TableProps } from 'antd';
 import { IProp } from './_type';
 
 
-export default function DataTable<T>({ columns, data, onClickRow }: IProp<T>) {
+export default function DataTable<T>({ columns, data, onClickRow, handlePageChange, totalCount }: IProp<T>) {
     return (
         <>
             <Table<T>
@@ -15,6 +15,7 @@ export default function DataTable<T>({ columns, data, onClickRow }: IProp<T>) {
                       onClick: () => onClickRow(record as TableProps<T>),
                     };
                   }}
+                pagination={{total: totalCount, onChange: handlePageChange, pageSize: 3}}
             />
         </>
     );

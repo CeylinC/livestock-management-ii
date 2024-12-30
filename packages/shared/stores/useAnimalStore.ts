@@ -1,22 +1,39 @@
 import { create } from "zustand";
 import { IAnimal } from "../models";
 import { col_animals, db } from "../services/firebase/firebase";
-import { addDoc, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  updateDoc,
+} from "firebase/firestore";
 import { Animal } from "../classes";
 
 interface AnimalState {
   animals: IAnimal[];
   selectedAnimal: IAnimal | null;
+  totalCount: number;
+  lastData: any | null;
   getAnimals: () => void;
+  fetchInitialData: (pageSize: number) => void;
+  fetchPage: (pageSize: number, pageNumber: number) => void;
   setAnimal: (animal: IAnimal) => void;
   updateAnimal: (animal: IAnimal) => void;
   deleteAnimal: (animalId: string) => void;
   selectAnimal: (animal: IAnimal | null) => void;
+  clearAnimals: () => void;
 }
 
 export const useAnimalStore = create<AnimalState>((set, get) => ({
   animals: [],
   selectedAnimal: null,
+  totalCount: 0,
+  lastData: null,
 
   getAnimals: async () => {
     const temp: IAnimal[] | null = [];
@@ -27,6 +44,46 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     });
 
     set(() => ({ animals: temp }));
+  },
+
+  fetchInitialData: async (pageSize: number) => {
+    const temp: IAnimal[] | null = [];
+    const ss = await getDocs(col_animals);
+    let lastDataCreateAt: any;
+
+    const q = query(col_animals, orderBy("createdAt", "desc"), limit(pageSize));
+    const qs = await getDocs(q);
+    qs.forEach((doc) => {
+      temp.push(new Animal({ ...doc.data(), id: doc.id }));
+      lastDataCreateAt = doc.data().createdAt;
+    });
+
+    set(() => ({ totalCount: ss.size, animals: temp, lastData: lastDataCreateAt }));
+  },
+
+  fetchPage: async (pageSize: number, pageNumber: number) => {
+    const { lastData } = get();
+    const temp: IAnimal[] | null = [];
+    let q;
+    let lastDataCreateAt: any;
+
+    if (pageNumber === 1) {
+      q = query(col_animals, orderBy("createdAt", "desc"), limit(pageSize));
+    } else {
+      q = query(
+        col_animals,
+        orderBy("createdAt", "desc"),
+        startAfter(lastData),
+        limit(pageSize)
+      );
+    }
+    const qs = await getDocs(q);
+    qs.forEach((doc) => {
+      temp.push(new Animal({ ...doc.data(), id: doc.id }));
+      lastDataCreateAt = doc.data().createdAt;
+    });
+    console.log(lastData)
+    set(() => ({ animals: temp, lastData: lastDataCreateAt }));
   },
 
   setAnimal: async (animal) => {
@@ -40,6 +97,7 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
       gender: animal.gender,
       birthday: animal.birthday.toString(),
       barnName: animal.barnName,
+      createdAt: new Date(),
     });
 
     set(() => ({ animals: [...animals, { ...animal, id: data.id }] }));
@@ -75,5 +133,9 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({
       selectedAnimal: animal,
     }));
+  },
+
+  clearAnimals: () => {
+    set(() => ({ animals: [] }));
   },
 }));
