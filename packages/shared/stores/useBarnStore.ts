@@ -6,14 +6,17 @@ import { Barn } from "../classes";
 
 interface BarnState {
   barns: IBarn[];
+  selectedBarn: IBarn | null;
   getBarns: () => void;
   setBarn: (barn: IBarn) => void;
   updateBarn: (barn: IBarn) => void;
   deleteBarn: (barnId: string) => void;
+  selectBarn: (barn: IBarn | null) => void;
 }
 
 export const useBarnStore = create<BarnState>((set, get) => ({
   barns: [],
+  selectedBarn: null,
 
   getBarns: async () => {
     const temp: IBarn[] | null = [];
@@ -56,5 +59,11 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     await deleteDoc(doc(db, "barns", barnId));
 
     set(() => ({ barns: barns.filter((b) => b.id !== barnId) }));
+  },
+  
+  selectBarn: (barn) => {
+    set(() => ({
+      selectedBarn: barn,
+    }));
   },
 }));

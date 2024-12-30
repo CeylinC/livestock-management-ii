@@ -6,14 +6,17 @@ import { Animal } from "../classes";
 
 interface AnimalState {
   animals: IAnimal[];
+  selectedAnimal: IAnimal | null;
   getAnimals: () => void;
   setAnimal: (animal: IAnimal) => void;
   updateAnimal: (animal: IAnimal) => void;
   deleteAnimal: (animalId: string) => void;
+  selectAnimal: (animal: IAnimal | null) => void;
 }
 
 export const useAnimalStore = create<AnimalState>((set, get) => ({
   animals: [],
+  selectedAnimal: null,
 
   getAnimals: async () => {
     const temp: IAnimal[] | null = [];
@@ -66,5 +69,11 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     await deleteDoc(doc(db, "animals", animalId));
 
     set(() => ({ animals: animals.filter((b) => b.id !== animalId) }));
+  },
+
+  selectAnimal: (animal) => {
+    set(() => ({
+      selectedAnimal: animal,
+    }));
   },
 }));

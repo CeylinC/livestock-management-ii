@@ -6,14 +6,17 @@ import { Sale } from "../classes";
 
 interface SaleState {
   sales: ISale[];
+  selectedSale: ISale | null;
   getSales: () => void;
   setSale: (sale: ISale) => void;
   updateSale: (sale: ISale) => void;
   deleteSale: (saleId: string) => void;
+  selectSale: (sale: ISale | null) => void;
 }
 
 export const useSaleStore = create<SaleState>((set, get) => ({
   sales: [],
+  selectedSale: null,
 
   getSales: async () => {
     const temp: ISale[] | null = [];
@@ -70,5 +73,11 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     await deleteDoc(doc(db, "sales", saleId));
 
     set(() => ({ sales: sales.filter((s) => s.id !== saleId) }));
+  },
+
+  selectSale: (sale) => {
+    set(() => ({
+      selectedSale: sale,
+    }));
   },
 }));

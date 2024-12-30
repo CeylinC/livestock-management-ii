@@ -1,5 +1,5 @@
 import { Dayjs } from "dayjs";
-import { saleCategory } from "../enums";
+import { paymentState, saleCategory } from "../enums";
 
 export interface ISale{
     id: string;
@@ -11,6 +11,6 @@ export interface ISale{
     saleDate: Dayjs;
     recipientName: string;
     contact: string;
-    paymentState: string;
+    paymentState: paymentState;
     paymentDate: Dayjs;
 }

@@ -5,15 +5,18 @@ import { col_stocks, db } from "../services/firebase/firebase";
 import { Stock } from "../classes";
 
 interface StockState {
-  stocks: IStock[] | null;
+  stocks: IStock[];
+  selectedStock: IStock | null;
   getStocks: () => void;
   setStock: (stock: IStock) => void;
   updateStock: (stock: IStock) => void;
   deleteStock: (stockId: string) => void;
+  selectStock: (stock: IStock | null) => void;
 }
 
 export const useStockStore = create<StockState>((set, get) => ({
   stocks: [],
+  selectedStock: null,
 
   getStocks: async () => {
     const temp: IStock[] | null = [];
@@ -60,5 +63,11 @@ export const useStockStore = create<StockState>((set, get) => ({
     await deleteDoc(doc(db, "stocks", stockId));
 
     set(() => ({ stocks: stocks.filter((s) => s.id !== stockId) }));
+  },
+
+  selectStock: (stock) => {
+    set(() => ({
+      selectedStock: stock,
+    }));
   },
 }));
