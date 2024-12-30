@@ -4,9 +4,10 @@ import Table from '../../components/Table';
 import { router } from 'expo-router';
 import { useBarnStore } from '@packages/shared/stores';
 import { IBarn } from '@packages/shared/models';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { styles } from '@/assets/style/tabs';
 import { paginationButtonLocal } from '@/constants/local';
+import { mobilePageSize } from '@packages/shared/constant';
 
 const columns = [
   'name',
@@ -15,10 +16,11 @@ const columns = [
 ];
 
 export default function BarnsScreen() {
-  const { selectBarn, getBarns, barns } = useBarnStore();
+  const { selectBarn, fetchInitialData, fetchPage, totalCount, barns } = useBarnStore();
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
-    getBarns();
+    fetchInitialData(mobilePageSize);
   }, [])
 
   const handleSelectRow = (item: IBarn) => {
@@ -26,11 +28,16 @@ export default function BarnsScreen() {
     router.replace('/addBarn');
   }
 
+  const handlePageChange = (current: number) => {
+    setCurrentPage(current);
+    fetchPage(mobilePageSize, current);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Ağıllar</Text>
       <Table<IBarn> handleSelectRow={handleSelectRow} data={barns} columns={columns} />
-      <Pagination total={5} current={1} locale={paginationButtonLocal} />
+      <Pagination total={Math.ceil(totalCount/mobilePageSize)} current={currentPage} locale={paginationButtonLocal} onChange={handlePageChange} />
       <Button type="primary" onPress={() => router.replace('/addBarn')}>Ağıl Ekle</Button>
     </SafeAreaView>
   );

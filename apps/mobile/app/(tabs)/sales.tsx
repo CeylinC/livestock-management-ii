@@ -4,9 +4,10 @@ import Table from '../../components/Table';
 import { router } from 'expo-router';
 import { useSaleStore } from '@packages/shared/stores';
 import { ISale } from '@packages/shared/models';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { styles } from '@/assets/style/tabs';
 import { paginationButtonLocal } from '@/constants/local';
+import { mobilePageSize } from '@packages/shared/constant';
 
 const columns = [
   'name',
@@ -22,10 +23,11 @@ const columns = [
 ];
 
 export default function SalesScreen() {
-  const { selectSale, getSales, sales } = useSaleStore();
+  const { selectSale, fetchInitialData, fetchPage, totalCount, sales } = useSaleStore();
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
-    getSales();
+    fetchInitialData(mobilePageSize);
   }, [])
 
   const handleSelectRow = (item: ISale) => {
@@ -33,11 +35,16 @@ export default function SalesScreen() {
     router.replace('/addSale');
   }
 
+  const handlePageChange = (current: number) => {
+    setCurrentPage(current);
+    fetchPage(mobilePageSize, current);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Satışlar</Text>
       <Table<ISale> handleSelectRow={handleSelectRow} data={sales} columns={columns} />
-      <Pagination total={5} current={1} locale={paginationButtonLocal} />
+      <Pagination total={Math.ceil(totalCount/mobilePageSize)} current={currentPage} locale={paginationButtonLocal} onChange={handlePageChange} />
       <Button type="primary" onPress={() => router.replace('/addSale')}>Satış Ekle</Button>
     </SafeAreaView>
   );
