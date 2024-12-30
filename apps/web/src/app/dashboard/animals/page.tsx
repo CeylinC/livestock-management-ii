@@ -7,16 +7,17 @@ import { useEffect, useState } from "react";
 import AddAnimal from "./addAnimal/addAnimal";
 import { IAnimal } from "@packages/shared/models";
 import { useAnimalStore } from "@packages/shared/stores";
+import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
-  const { getAnimals, animals } = useAnimalStore();
+  const { fetchInitialData, fetchPage, totalCount, animals } = useAnimalStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableAnimal[]>([]);
   const [selectedData, setSelectedData] = useState<IAnimal>();
 
   useEffect(() => {
-    getAnimals()
+    fetchInitialData(webPageSize)
   }, [])
 
   useEffect(() => {
@@ -47,12 +48,16 @@ export default function Dashboard() {
     setIsAddOpen(true);
   }
 
+  const handlePageChange = (page: number, pageSize: number) => {
+    fetchPage(pageSize, page);
+  };
+
   return (
     <div className="w-full h-screen flex items-center flex-col">
       <h1>Hayvanlar</h1>
       <Button onClick={handleCreateData}>Hayvan Ekle</Button>
       <AddAnimal isOpen={isAddOpen} setIsOpen={setIsAddOpen} data={selectedData} />
-      <DataTable columns={columns} data={datas} onClickRow={onClickRow} />
+      <DataTable columns={columns} data={datas} onClickRow={onClickRow} handlePageChange={handlePageChange} totalCount={totalCount}/>
     </div>
   );
 }
@@ -96,4 +101,3 @@ const columns: TableProps<ITableAnimal>['columns'] = [
     key: 'barnName',
   },
 ];
-

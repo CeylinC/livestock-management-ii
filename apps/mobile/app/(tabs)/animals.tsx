@@ -4,9 +4,10 @@ import Table from '../../components/Table';
 import { router } from 'expo-router';
 import { useAnimalStore } from '@packages/shared/stores';
 import { IAnimal } from '@packages/shared/models';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { styles } from '@/assets/style/tabs';
 import { paginationButtonLocal } from '@/constants/local';
+import { mobilePageSize } from "@packages/shared/constant";
 
 const columns = [
   'name',
@@ -19,11 +20,17 @@ const columns = [
 ];
 
 export default function AnimalsScreen() {
-  const { selectAnimal, getAnimals, animals } = useAnimalStore();
+  const { fetchInitialData, fetchPage, totalCount, animals, selectAnimal } = useAnimalStore();
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
-    getAnimals();
+    fetchInitialData(mobilePageSize);
   }, [])
+
+  const handlePageChange = (current: number) => {
+    setCurrentPage(current);
+    fetchPage(mobilePageSize, current);
+  };
 
   const handleSelectRow = (item: IAnimal) => {
     selectAnimal(item);
@@ -34,7 +41,7 @@ export default function AnimalsScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Hayvanlar</Text>
       <Table<IAnimal> handleSelectRow={handleSelectRow} data={animals} columns={columns} />
-      <Pagination total={5} current={1} locale={paginationButtonLocal} />
+      <Pagination total={Math.ceil(totalCount/mobilePageSize)} current={currentPage} locale={paginationButtonLocal} onChange={handlePageChange}/>
       <Button type="primary" onPress={() => router.replace('/addAnimal')}>Hayvan Ekle</Button>
     </SafeAreaView>
   );

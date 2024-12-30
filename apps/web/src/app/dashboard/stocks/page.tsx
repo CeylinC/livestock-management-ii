@@ -7,9 +7,10 @@ import { useEffect, useState } from "react";
 import AddStock from "./addStock/addStock";
 import { useStockStore } from "@packages/shared/stores";
 import { IStock } from "@packages/shared/models";
+import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
-  const { getStocks, stocks } = useStockStore();
+  const { fetchInitialData, fetchPage, totalCount, stocks } = useStockStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableStock[]>([]);
@@ -17,7 +18,7 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    getStocks()
+    fetchInitialData(webPageSize)
   }, [])
 
   useEffect(() => {
@@ -46,12 +47,16 @@ export default function Dashboard() {
     setIsAddOpen(true);
   }
 
+  const handlePageChange = (page: number, pageSize: number) => {
+    fetchPage(pageSize, page);
+  };
+
   return (
     <div className="w-full h-screen flex items-center flex-col">
       <h1>Stoklar</h1>
       <Button onClick={handleCreateData}>Stok Ekle</Button>
       <AddStock isOpen={isAddOpen} setIsOpen={setIsAddOpen} data={selectedData} />
-      <DataTable columns={columns} data={datas} onClickRow={onClickRow} />
+      <DataTable columns={columns} data={datas} onClickRow={onClickRow} handlePageChange={handlePageChange} totalCount={totalCount}/>
     </div>
   );
 }

@@ -7,16 +7,17 @@ import { useEffect, useState } from "react";
 import AddSale from "./addSale/addSale";
 import { useSaleStore } from "@packages/shared/stores";
 import { ISale } from "@packages/shared/models";
+import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
-  const { getSales, sales } = useSaleStore();
+  const { fetchInitialData, fetchPage, totalCount, sales } = useSaleStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableSale[]>([]);
   const [selectedData, setSelectedData] = useState<ISale>();
 
   useEffect(() => {
-    getSales()
+    fetchInitialData(webPageSize)
   }, [])
 
   useEffect(() => {
@@ -50,12 +51,16 @@ export default function Dashboard() {
     setIsAddOpen(true);
   }
 
+  const handlePageChange = (page: number, pageSize: number) => {
+    fetchPage(pageSize, page);
+  };
+
   return (
     <div className="w-full h-screen flex items-center flex-col">
       <h1>Satışlar</h1>
       <Button onClick={handleCreateData}>Satış Ekle</Button>
-      <AddSale isOpen={isAddOpen} setIsOpen={setIsAddOpen} data={selectedData}/>
-      <DataTable columns={columns} data={datas} onClickRow={onClickRow} />
+      <AddSale isOpen={isAddOpen} setIsOpen={setIsAddOpen} data={selectedData} />
+      <DataTable columns={columns} data={datas} onClickRow={onClickRow} handlePageChange={handlePageChange} totalCount={totalCount} />
     </div>
   );
 }
