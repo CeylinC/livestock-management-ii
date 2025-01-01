@@ -1,14 +1,11 @@
 "use client";
-
 import { Button, Form, FormProps, Input } from "antd";
+import { useUserStore } from "@packages/shared/stores";
+import { useRouter } from "next/navigation";
 
 type FieldType = {
   username?: string;
   password?: string;
-};
-
-const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
-  console.log("Success:", values);
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
@@ -16,6 +13,18 @@ const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
 };
 
 export default function Signup() {
+  const { signUp } = useUserStore();
+  const router = useRouter();
+
+const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
+    if (values.username && values.password) {
+      if (await signUp(values.username, values.password)) {
+        router.push("/dashboard");
+      }
+    }
+    console.log("Success:", values);
+  };
+
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center">
       <h1>Signup</h1>
@@ -46,7 +55,7 @@ export default function Signup() {
         </Form.Item>
 
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-          <Button type="primary">Submit</Button>
+          <Button type="primary" htmlType="submit">Submit</Button>
         </Form.Item>
       </Form>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -18,6 +18,8 @@ import localeData from 'dayjs/plugin/localeData'
 import weekday from 'dayjs/plugin/weekday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekYear from 'dayjs/plugin/weekYear'
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@packages/shared/stores";
 
 dayjs.extend(customParseFormat)
 dayjs.extend(advancedFormat)
@@ -27,6 +29,7 @@ dayjs.extend(weekOfYear)
 dayjs.extend(weekYear)
 
 const { Header, Sider, Content } = Layout;
+
 
 const navbarList = [
   {
@@ -61,22 +64,48 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { authControl, logout } = useUserStore();
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const control = async () => {
+      if (!await authControl()) {
+        router.push('/login')
+      }
+    }
+    control();
+  }, [])
+
+  const handleLogout = async () => {
+    if (await logout()) {
+      router.push('/login')
+    }
+  }
 
   return (
     <Layout>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={[findKeyByHref(pathname)]}
-          items={navbarList}
-        />
+        <div className="demo-logo-vertical flex flex-col h-full justify-between">
+          <Menu
+            theme="dark"
+            mode="inline"
+            defaultSelectedKeys={[findKeyByHref(pathname)]}
+            items={navbarList}
+          />
+          <Button
+            className="flex flex-row justify-start m-1 pl-6 pr-4 border-0"
+            color="danger"
+            variant="link"
+            onClick={handleLogout}
+            >
+              Çıkış Yap
+            </Button>
+        </div>
       </Sider>
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>
