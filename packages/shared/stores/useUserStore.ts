@@ -9,6 +9,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
+import { mobileAuth } from "../services/firebase/firebaseConfig";
 
 interface UserState {
   user: IUser | null;
@@ -16,6 +17,10 @@ interface UserState {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
   authControl: () => Promise<boolean>;
+  signUpMobile: (email: string, password: string) => Promise<boolean>;
+  loginMobile: (email: string, password: string) => Promise<boolean>;
+  logoutMobile: () => Promise<boolean>;
+  authControlMobile: () => Promise<boolean>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -64,6 +69,52 @@ export const useUserStore = create<UserState>((set, get) => ({
     const auth = getAuth();
     return new Promise<boolean>((resolve) => {
       onAuthStateChanged(auth, (user) => {
+        if (user) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  },
+
+  signUpMobile: async (email: string, password: string) => {
+    try {
+      await createUserWithEmailAndPassword(mobileAuth, email, password);
+      return true;
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log(errorCode, errorMessage);
+      return false;
+    }
+  },
+
+  loginMobile: async (email: string, password: string) => {
+    try {
+      await signInWithEmailAndPassword(mobileAuth, email, password);
+      return true;
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log(errorCode, errorMessage);
+      return false;
+    }
+  },
+
+  logoutMobile: async () => {
+    try {
+      await signOut(mobileAuth);
+      return true;
+    } catch (error) {
+      console.error("Error during logout:", error);
+      return false;
+    }
+  },
+
+  authControlMobile: async () => {
+    return new Promise<boolean>((resolve) => {
+      onAuthStateChanged(mobileAuth, (user) => {
         if (user) {
           resolve(true);
         } else {

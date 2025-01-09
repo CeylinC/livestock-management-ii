@@ -1,12 +1,24 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { router, Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
 
 import { TabBarIcon } from '../../components/navigation/TabBarIcon';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
+import { useUserStore } from '@packages/shared/stores';
+
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { authControlMobile } = useUserStore();
+
+    useEffect(() => {
+      const control = async () => {
+        if (!await authControlMobile()) {
+          router.replace('(auth)/login' as any);
+        }
+      }
+      control();
+    }, [])
 
   return (
     <Tabs
