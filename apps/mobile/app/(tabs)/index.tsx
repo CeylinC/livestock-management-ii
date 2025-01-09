@@ -1,6 +1,17 @@
+import { Button } from '@ant-design/react-native';
+import { useUserStore } from '@packages/shared/stores';
+import { router } from 'expo-router';
 import { StyleSheet, Text, SafeAreaView, ScrollView, StatusBar } from 'react-native';
 
 export default function HomeScreen() {
+    const { logoutMobile } = useUserStore();
+
+    const logout = async () => {
+            if (await logoutMobile()) {
+              router.replace('(auth)/login' as any);
+            }
+          }
+  
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -14,6 +25,7 @@ export default function HomeScreen() {
           pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
           culpa qui officia deserunt mollit anim id est laborum.
         </Text>
+        <Button onPress={logout}><Text>Logout</Text></Button>
       </ScrollView>
     </SafeAreaView>
   );
