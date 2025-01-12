@@ -10,26 +10,25 @@ import {
 } from "@ant-design/icons";
 import { Button, Layout, Menu, theme } from "antd";
 import Link from "next/link";
-import { usePathname } from 'next/navigation'
-import dayjs from 'dayjs'
-import advancedFormat from 'dayjs/plugin/advancedFormat'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
-import localeData from 'dayjs/plugin/localeData'
-import weekday from 'dayjs/plugin/weekday'
-import weekOfYear from 'dayjs/plugin/weekOfYear'
-import weekYear from 'dayjs/plugin/weekYear'
+import { usePathname } from "next/navigation";
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import localeData from "dayjs/plugin/localeData";
+import weekday from "dayjs/plugin/weekday";
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import weekYear from "dayjs/plugin/weekYear";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@packages/shared/stores";
 
-dayjs.extend(customParseFormat)
-dayjs.extend(advancedFormat)
-dayjs.extend(weekday)
-dayjs.extend(localeData)
-dayjs.extend(weekOfYear)
-dayjs.extend(weekYear)
+dayjs.extend(customParseFormat);
+dayjs.extend(advancedFormat);
+dayjs.extend(weekday);
+dayjs.extend(localeData);
+dayjs.extend(weekOfYear);
+dayjs.extend(weekYear);
 
 const { Header, Sider, Content } = Layout;
-
 
 const navbarList = [
   {
@@ -64,7 +63,7 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { authControl, logout } = useUserStore();
+  const { authControl, logout, user, getUser } = useUserStore();
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -74,18 +73,28 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const control = async () => {
-      if (!await authControl()) {
-        router.push('/login')
+      if (!(await authControl())) {
+        router.push("/login");
+      } else {
+        if (!user) {
+          const token = sessionStorage.getItem(
+            "firebase:authUser:AIzaSyD7bmbh5v0Z4NkrPveOKDMhuyOsVP0jr7Y:[DEFAULT]"
+          );
+          if (token) {
+            const user = JSON.parse(token);
+            getUser(user.uid);
+          }
+        }
       }
-    }
+    };
     control();
-  }, [])
+  }, []);
 
   const handleLogout = async () => {
     if (await logout()) {
-      router.push('/login')
+      router.push("/login");
     }
-  }
+  };
 
   return (
     <Layout>
@@ -102,9 +111,9 @@ export default function DashboardLayout({
             color="danger"
             variant="link"
             onClick={handleLogout}
-            >
-              Çıkış Yap
-            </Button>
+          >
+            Çıkış Yap
+          </Button>
         </div>
       </Sider>
       <Layout>

@@ -7,15 +7,16 @@ import React from 'react'
 import { ScrollView, Text } from 'react-native'
 import { router } from 'expo-router';
 import { useUserStore } from '@packages/shared/stores';
+import { mobileAuth } from '../_layout';
 
 export default function SignupScreen() {
-  const { signUpMobile } = useUserStore();
+  const { signUp } = useUserStore();
   const [form] = Form.useForm()
 
   const onSubmit= async () => {
     const values = form.getFieldsValue();
     if (values.username && values.password) {
-      if (await signUpMobile(values.username, values.password)) {
+      if (await signUp(values.username, values.password, mobileAuth, 'mobile')) {
         router.push("/(tabs)");
       }
     }

@@ -6,19 +6,22 @@ import { ITableAnimal } from "./_type";
 import { useEffect, useState } from "react";
 import AddAnimal from "./addAnimal/addAnimal";
 import { IAnimal } from "@packages/shared/models";
-import { useAnimalStore } from "@packages/shared/stores";
+import { useAnimalStore, useUserStore } from "@packages/shared/stores";
 import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
   const { fetchInitialData, fetchPage, totalCount, animals } = useAnimalStore();
+  const { user } = useUserStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableAnimal[]>([]);
   const [selectedData, setSelectedData] = useState<IAnimal>();
 
   useEffect(() => {
-    fetchInitialData(webPageSize)
-  }, [])
+    if(user) {
+      fetchInitialData(webPageSize, user.id)
+    }
+  }, [user])
 
   useEffect(() => {
     if (animals !== null) {
@@ -49,7 +52,7 @@ export default function Dashboard() {
   }
 
   const handlePageChange = (page: number, pageSize: number) => {
-    fetchPage(pageSize, page);
+    fetchPage(pageSize, page, user?.id!);
   };
 
   return (

@@ -5,20 +5,23 @@ import DataTable from "@/components/DataTable";
 import { ITableBarn } from "./_type";
 import { useEffect, useState } from "react";
 import AddBarns from "./addBarn/addBarn";
-import { useBarnStore } from "@packages/shared/stores";
+import { useBarnStore, useUserStore } from "@packages/shared/stores";
 import { IBarn } from "@packages/shared/models";
 import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
   const { fetchInitialData, fetchPage, totalCount, barns } = useBarnStore();
+  const { user } = useUserStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableBarn[]>([]);
   const [selectedData, setSelectedData] = useState<IBarn>();
 
   useEffect(() => {
-    fetchInitialData(webPageSize)
-  }, [])
+    if(user) {
+      fetchInitialData(webPageSize, user.id)
+    }
+  }, [user])
 
   useEffect(() => {
     if (barns !== null) {
@@ -45,7 +48,7 @@ export default function Dashboard() {
   }
 
   const handlePageChange = (page: number, pageSize: number) => {
-    fetchPage(pageSize, page);
+    fetchPage(pageSize, page, user?.id!);
   };
 
 

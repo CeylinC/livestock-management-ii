@@ -1,7 +1,18 @@
 import { create } from "zustand";
 import { ISale } from "../models";
-import { addDoc, deleteDoc, doc, getDocs, limit, orderBy, query, startAfter, updateDoc } from "firebase/firestore";
-import { col_sales, db } from "../services/firebase/firebase";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "../services/firebase/firebase";
 import { Sale } from "../classes";
 
 interface SaleState {
@@ -9,12 +20,12 @@ interface SaleState {
   selectedSale: ISale | null;
   totalCount: number;
   lastData: any | null;
-  getSales: () => void;
-  fetchInitialData: (pageSize: number) => void;
-  fetchPage: (pageSize: number, pageNumber: number) => void;
-  setSale: (sale: ISale) => void;
-  updateSale: (sale: ISale) => void;
-  deleteSale: (saleId: string) => void;
+  getSales: (uid: string) => void;
+  fetchInitialData: (pageSize: number, uid: string) => void;
+  fetchPage: (pageSize: number, pageNumber: number, uid: string) => void;
+  setSale: (sale: ISale, uid: string) => void;
+  updateSale: (sale: ISale, uid: string) => void;
+  deleteSale: (saleId: string, uid: string) => void;
   selectSale: (sale: ISale | null) => void;
 }
 
@@ -24,10 +35,10 @@ export const useSaleStore = create<SaleState>((set, get) => ({
   totalCount: 0,
   lastData: null,
 
-  getSales: async () => {
+  getSales: async (uid) => {
     const temp: ISale[] | null = [];
 
-    const qs = await getDocs(col_sales);
+    const qs = await getDocs(collection(doc(db, "users", uid), "sales"));
     qs.forEach((doc) => {
       temp.push(new Sale({ ...doc.data(), id: doc.id }));
     });
@@ -35,12 +46,16 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     set(() => ({ sales: temp }));
   },
 
-  fetchInitialData: async (pageSize: number) => {
+  fetchInitialData: async (pageSize, uid) => {
     const temp: ISale[] | null = [];
-    const ss = await getDocs(col_sales);
+    const ss = await getDocs(collection(doc(db, "users", uid), "sales"));
     let lastDataCreateAt: any;
 
-    const q = query(col_sales, orderBy("createdAt", "desc"), limit(pageSize));
+    const q = query(
+      collection(doc(db, "users", uid), "sales"),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
     const qs = await getDocs(q);
     qs.forEach((doc) => {
       temp.push(new Sale({ ...doc.data(), id: doc.id }));
@@ -54,17 +69,21 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     }));
   },
 
-  fetchPage: async (pageSize: number, pageNumber: number) => {
+  fetchPage: async (pageSize, pageNumber, uid) => {
     const { lastData } = get();
     const temp: ISale[] = [];
     let q: any;
     let lastDataCreateAt: any;
 
     if (pageNumber === 1) {
-      q = query(col_sales, orderBy("createdAt", "desc"), limit(pageSize));
+      q = query(
+        collection(doc(db, "users", uid), "sales"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
     } else {
       q = query(
-        col_sales,
+        collection(doc(db, "users", uid), "sales"),
         orderBy("createdAt", "desc"),
         startAfter(lastData),
         limit(pageSize)
@@ -80,10 +99,10 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     set(() => ({ sales: temp, lastData: lastDataCreateAt }));
   },
 
-  setSale: async (sale) => {
+  setSale: async (sale, uid) => {
     const { sales } = get();
 
-    const data = await addDoc(col_sales, {
+    const data = await addDoc(collection(doc(db, "users", uid), "sales"), {
       name: sale.name,
       type: sale.type,
       category: sale.category,
@@ -100,9 +119,9 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     set(() => ({ sales: [{ ...sale, id: data.id }, ...sales] }));
   },
 
-  updateSale: async (sale) => {
+  updateSale: async (sale, uid) => {
     const { sales } = get();
-    const docRef = doc(db, "sales", sale.id);
+    const docRef = doc(db, "users", uid, "sales", sale.id);
 
     await updateDoc(docRef, {
       name: sale.name,
@@ -120,9 +139,9 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     set(() => ({ sales: sales.map((s) => (s.id === sale.id ? sale : s)) }));
   },
 
-  deleteSale: async (saleId) => {
+  deleteSale: async (saleId, uid) => {
     const { sales } = get();
-    await deleteDoc(doc(db, "sales", saleId));
+    await deleteDoc(doc(db, "users", uid, "sales", saleId));
 
     set(() => ({ sales: sales.filter((s) => s.id !== saleId) }));
   },

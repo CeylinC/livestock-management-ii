@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { IAnimal } from "../models";
-import { col_animals, db } from "../services/firebase/firebase";
+import { db } from "../services/firebase/firebase";
 import {
   addDoc,
+  collection,
   deleteDoc,
   doc,
   getDocs,
@@ -19,12 +20,12 @@ interface AnimalState {
   selectedAnimal: IAnimal | null;
   totalCount: number;
   lastData: any | null;
-  getAnimals: () => void;
-  fetchInitialData: (pageSize: number) => void;
-  fetchPage: (pageSize: number, pageNumber: number) => void;
-  setAnimal: (animal: IAnimal) => void;
-  updateAnimal: (animal: IAnimal) => void;
-  deleteAnimal: (animalId: string) => void;
+  getAnimals: (uid: string) => void;
+  fetchInitialData: (pageSize: number, uid: string) => void;
+  fetchPage: (pageSize: number, pageNumber: number, uid: string) => void;
+  setAnimal: (animal: IAnimal, uid: string) => void;
+  updateAnimal: (animal: IAnimal, uid: string) => void;
+  deleteAnimal: (animalId: string, uid: string) => void;
   selectAnimal: (animal: IAnimal | null) => void;
 }
 
@@ -34,10 +35,10 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
   totalCount: 0,
   lastData: null,
 
-  getAnimals: async () => {
+  getAnimals: async (uid) => {
     const temp: IAnimal[] | null = [];
 
-    const qs = await getDocs(col_animals);
+    const qs = await getDocs(collection(doc(db, "users", uid), "animals"));
     qs.forEach((doc) => {
       temp.push(new Animal({ ...doc.data(), id: doc.id }));
     });
@@ -45,12 +46,16 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({ animals: temp }));
   },
 
-  fetchInitialData: async (pageSize: number) => {
+  fetchInitialData: async (pageSize, uid) => {
     const temp: IAnimal[] | null = [];
-    const ss = await getDocs(col_animals);
+    const ss = await getDocs(collection(doc(db, "users", uid), "animals"));
     let lastDataCreateAt: any;
 
-    const q = query(col_animals, orderBy("createdAt", "desc"), limit(pageSize));
+    const q = query(
+      collection(doc(db, "users", uid), "animals"),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
     const qs = await getDocs(q);
     qs.forEach((doc) => {
       temp.push(new Animal({ ...doc.data(), id: doc.id }));
@@ -64,17 +69,21 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     }));
   },
 
-  fetchPage: async (pageSize: number, pageNumber: number) => {
+  fetchPage: async (pageSize, pageNumber, uid) => {
     const { lastData } = get();
     const temp: IAnimal[] = [];
     let q: any;
     let lastDataCreateAt: any;
 
     if (pageNumber === 1) {
-      q = query(col_animals, orderBy("createdAt", "desc"), limit(pageSize));
+      q = query(
+        collection(doc(db, "users", uid), "animals"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
     } else {
       q = query(
-        col_animals,
+        collection(doc(db, "users", uid), "animals"),
         orderBy("createdAt", "desc"),
         startAfter(lastData),
         limit(pageSize)
@@ -90,10 +99,10 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({ animals: temp, lastData: lastDataCreateAt }));
   },
 
-  setAnimal: async (animal) => {
+  setAnimal: async (animal, uid) => {
     const { animals } = get();
 
-    const data = await addDoc(col_animals, {
+    const data = await addDoc(collection(doc(db, "users", uid), "animals"), {
       name: animal.name,
       earring: animal.earring,
       type: animal.type,
@@ -107,9 +116,9 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({ animals: [{ ...animal, id: data.id }, ...animals] }));
   },
 
-  updateAnimal: async (animal) => {
+  updateAnimal: async (animal, uid) => {
     const { animals } = get();
-    const docRef = doc(db, "animals", animal.id);
+    const docRef = doc(db, "users", uid, "animals", animal.id);
 
     await updateDoc(docRef, {
       name: animal.name,
@@ -126,9 +135,9 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     }));
   },
 
-  deleteAnimal: async (animalId) => {
+  deleteAnimal: async (animalId, uid) => {
     const { animals } = get();
-    await deleteDoc(doc(db, "animals", animalId));
+    await deleteDoc(doc(db, "users", uid, "animals", animalId));
 
     set(() => ({ animals: animals.filter((b) => b.id !== animalId) }));
   },
