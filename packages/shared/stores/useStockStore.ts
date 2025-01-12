@@ -10,8 +10,9 @@ import {
   orderBy,
   limit,
   startAfter,
+  collection,
 } from "firebase/firestore";
-import { col_stocks, db } from "../services/firebase/firebase";
+import { db } from "../services/firebase/firebase";
 import { Stock } from "../classes";
 
 interface StockState {
@@ -19,12 +20,12 @@ interface StockState {
   selectedStock: IStock | null;
   totalCount: number;
   lastData: any | null;
-  getStocks: () => void;
-  fetchInitialData: (pageSize: number) => void;
-  fetchPage: (pageSize: number, pageNumber: number) => void;
-  setStock: (stock: IStock) => void;
-  updateStock: (stock: IStock) => void;
-  deleteStock: (stockId: string) => void;
+  getStocks: (uid: string) => void;
+  fetchInitialData: (pageSize: number, uid: string) => void;
+  fetchPage: (pageSize: number, pageNumber: number, uid: string) => void;
+  setStock: (stock: IStock, uid: string) => void;
+  updateStock: (stock: IStock, uid: string) => void;
+  deleteStock: (stockId: string, uid: string) => void;
   selectStock: (stock: IStock | null) => void;
 }
 
@@ -34,10 +35,10 @@ export const useStockStore = create<StockState>((set, get) => ({
   totalCount: 0,
   lastData: null,
 
-  getStocks: async () => {
+  getStocks: async (uid) => {
     const temp: IStock[] | null = [];
 
-    const qs = await getDocs(col_stocks);
+    const qs = await getDocs(collection(doc(db, "users", uid), "stocks"));
     qs.forEach((doc) => {
       temp.push(new Stock({ ...doc.data(), id: doc.id }));
     });
@@ -45,12 +46,16 @@ export const useStockStore = create<StockState>((set, get) => ({
     set(() => ({ stocks: temp }));
   },
 
-  fetchInitialData: async (pageSize: number) => {
+  fetchInitialData: async (pageSize, uid) => {
     const temp: IStock[] | null = [];
-    const ss = await getDocs(col_stocks);
+    const ss = await getDocs(collection(doc(db, "users", uid), "stocks"));
     let lastDataCreateAt: any;
 
-    const q = query(col_stocks, orderBy("createdAt", "desc"), limit(pageSize));
+    const q = query(
+      collection(doc(db, "users", uid), "stocks"),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
     const qs = await getDocs(q);
     qs.forEach((doc) => {
       temp.push(new Stock({ ...doc.data(), id: doc.id }));
@@ -64,17 +69,21 @@ export const useStockStore = create<StockState>((set, get) => ({
     }));
   },
 
-  fetchPage: async (pageSize: number, pageNumber: number) => {
+  fetchPage: async (pageSize, pageNumber, uid) => {
     const { lastData } = get();
     const temp: IStock[] = [];
     let q: any;
     let lastDataCreateAt: any;
 
     if (pageNumber === 1) {
-      q = query(col_stocks, orderBy("createdAt", "desc"), limit(pageSize));
+      q = query(
+        collection(doc(db, "users", uid), "stocks"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
     } else {
       q = query(
-        col_stocks,
+        collection(doc(db, "users", uid), "stocks"),
         orderBy("createdAt", "desc"),
         startAfter(lastData),
         limit(pageSize)
@@ -90,10 +99,10 @@ export const useStockStore = create<StockState>((set, get) => ({
     set(() => ({ stocks: temp, lastData: lastDataCreateAt }));
   },
 
-  setStock: async (stock) => {
+  setStock: async (stock, uid) => {
     const { stocks } = get();
 
-    const data = await addDoc(col_stocks, {
+    const data = await addDoc(collection(doc(db, "users", uid), "stocks"), {
       name: stock.name,
       category: stock.category,
       amount: stock.amount,
@@ -105,9 +114,9 @@ export const useStockStore = create<StockState>((set, get) => ({
     set(() => ({ stocks: [{ ...stock, id: data.id }, ...stocks] }));
   },
 
-  updateStock: async (stock) => {
+  updateStock: async (stock, uid) => {
     const { stocks } = get();
-    const docRef = doc(db, "stocks", stock.id);
+    const docRef = doc(db, "users", uid, "stocks", stock.id);
 
     await updateDoc(docRef, {
       name: stock.name,
@@ -120,9 +129,9 @@ export const useStockStore = create<StockState>((set, get) => ({
     set(() => ({ stocks: stocks.map((s) => (s.id === stock.id ? stock : s)) }));
   },
 
-  deleteStock: async (stockId) => {
+  deleteStock: async (stockId, uid) => {
     const { stocks } = get();
-    await deleteDoc(doc(db, "stocks", stockId));
+    await deleteDoc(doc(db, "users", uid, "stocks", stockId));
 
     set(() => ({ stocks: stocks.filter((s) => s.id !== stockId) }));
   },

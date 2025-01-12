@@ -5,12 +5,13 @@ import { Button, TableProps } from "antd";
 import { ITableStock } from "./_type";
 import { useEffect, useState } from "react";
 import AddStock from "./addStock/addStock";
-import { useStockStore } from "@packages/shared/stores";
+import { useStockStore, useUserStore } from "@packages/shared/stores";
 import { IStock } from "@packages/shared/models";
 import { webPageSize } from "@packages/shared/constant";
 
 export default function Dashboard() {
   const { fetchInitialData, fetchPage, totalCount, stocks } = useStockStore();
+  const { user } = useUserStore();
 
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [datas, setDatas] = useState<ITableStock[]>([]);
@@ -18,8 +19,10 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    fetchInitialData(webPageSize)
-  }, [])
+    if(user) {
+      fetchInitialData(webPageSize, user.id)
+    }
+  }, [user])
 
   useEffect(() => {
     if (stocks !== null) {
@@ -48,7 +51,7 @@ export default function Dashboard() {
   }
 
   const handlePageChange = (page: number, pageSize: number) => {
-    fetchPage(pageSize, page);
+    fetchPage(pageSize, page, user?.id!);
   };
 
   return (

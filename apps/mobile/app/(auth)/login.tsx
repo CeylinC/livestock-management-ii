@@ -7,16 +7,17 @@ import React from 'react'
 import { ScrollView, Text } from 'react-native'
 import { router } from 'expo-router';
 import { useUserStore } from '@packages/shared/stores';
+import { mobileAuth } from '../_layout';
 
 export default function LoginScreen() {
-  const { loginMobile } = useUserStore();
+  const { login } = useUserStore();
   const [form] = Form.useForm()
 
   const onSubmit= async () => {
     const values = form.getFieldsValue();
     console.log(values)
     if (values.username && values.password) {
-      if (await loginMobile(values.username, values.password)) {
+      if (await login(values.username, values.password, mobileAuth, 'mobile')) {
         router.push("/(tabs)");
       }
     }

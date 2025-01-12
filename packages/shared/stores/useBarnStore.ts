@@ -1,5 +1,6 @@
 import {
   addDoc,
+  collection,
   deleteDoc,
   doc,
   getDocs,
@@ -11,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { IBarn } from "../models/IBarn";
 import { create } from "zustand";
-import { col_barns, db } from "../services/firebase/firebase";
+import { db } from "../services/firebase/firebase";
 import { Barn } from "../classes";
 
 interface BarnState {
@@ -19,12 +20,12 @@ interface BarnState {
   selectedBarn: IBarn | null;
   totalCount: number;
   lastData: any | null;
-  getBarns: () => void;
-  fetchInitialData: (pageSize: number) => void;
-  fetchPage: (pageSize: number, pageNumber: number) => void;
-  setBarn: (barn: IBarn) => void;
-  updateBarn: (barn: IBarn) => void;
-  deleteBarn: (barnId: string) => void;
+  getBarns: (uid: string) => void;
+  fetchInitialData: (pageSize: number, uid: string) => void;
+  fetchPage: (pageSize: number, pageNumber: number, uid: string) => void;
+  setBarn: (barn: IBarn, uid: string) => void;
+  updateBarn: (barn: IBarn, uid: string) => void;
+  deleteBarn: (barnId: string, uid: string) => void;
   selectBarn: (barn: IBarn | null) => void;
 }
 
@@ -34,10 +35,10 @@ export const useBarnStore = create<BarnState>((set, get) => ({
   totalCount: 0,
   lastData: null,
 
-  getBarns: async () => {
+  getBarns: async (uid) => {
     const temp: IBarn[] | null = [];
 
-    const qs = await getDocs(col_barns);
+    const qs = await getDocs(collection(doc(db, "users", uid), "barns"));
     qs.forEach((doc) => {
       temp.push(new Barn({ ...doc.data(), id: doc.id }));
     });
@@ -45,12 +46,16 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     set(() => ({ barns: temp }));
   },
 
-  fetchInitialData: async (pageSize: number) => {
+  fetchInitialData: async (pageSize, uid) => {
     const temp: IBarn[] | null = [];
-    const ss = await getDocs(col_barns);
+    const ss = await getDocs(collection(doc(db, "users", uid), "barns"));
     let lastDataCreateAt: any;
 
-    const q = query(col_barns, orderBy("createdAt", "desc"), limit(pageSize));
+    const q = query(
+      collection(doc(db, "users", uid), "barns"),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
     const qs = await getDocs(q);
     qs.forEach((doc) => {
       temp.push(new Barn({ ...doc.data(), id: doc.id }));
@@ -64,17 +69,21 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     }));
   },
 
-  fetchPage: async (pageSize: number, pageNumber: number) => {
+  fetchPage: async (pageSize, pageNumber, uid) => {
     const { lastData } = get();
     const temp: IBarn[] = [];
     let q: any;
     let lastDataCreateAt: any;
 
     if (pageNumber === 1) {
-      q = query(col_barns, orderBy("createdAt", "desc"), limit(pageSize));
+      q = query(
+        collection(doc(db, "users", uid), "barns"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
     } else {
       q = query(
-        col_barns,
+        collection(doc(db, "users", uid), "barns"),
         orderBy("createdAt", "desc"),
         startAfter(lastData),
         limit(pageSize)
@@ -90,10 +99,10 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     set(() => ({ barns: temp, lastData: lastDataCreateAt }));
   },
 
-  setBarn: async (barn) => {
+  setBarn: async (barn, uid) => {
     const { barns } = get();
 
-    const data = await addDoc(col_barns, {
+    const data = await addDoc(collection(doc(db, "users", uid), "barns"), {
       name: barn.name,
       type: barn.type,
       gender: barn.gender,
@@ -103,9 +112,9 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     set(() => ({ barns: [{ ...barn, id: data.id }, ...barns] }));
   },
 
-  updateBarn: async (barn) => {
+  updateBarn: async (barn, uid) => {
     const { barns } = get();
-    const docRef = doc(db, "barns", barn.id);
+    const docRef = doc(db, "users", uid, "barns", barn.id);
 
     await updateDoc(docRef, {
       name: barn.name,
@@ -116,9 +125,9 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     set(() => ({ barns: barns.map((s) => (s.id === barn.id ? barn : s)) }));
   },
 
-  deleteBarn: async (barnId) => {
+  deleteBarn: async (barnId, uid) => {
     const { barns } = get();
-    await deleteDoc(doc(db, "barns", barnId));
+    await deleteDoc(doc(db, "users", uid, "barns", barnId));
 
     set(() => ({ barns: barns.filter((b) => b.id !== barnId) }));
   },

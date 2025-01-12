@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { IUser } from "../models/IUser";
 import {
+  Auth,
   browserSessionPersistence,
   createUserWithEmailAndPassword,
   getAuth,
@@ -9,28 +10,44 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { mobileAuth } from "../services/firebase/firebaseConfig";
+import { db } from "../services/firebase/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { User } from "../classes/User";
 
 interface UserState {
   user: IUser | null;
-  signUp: (email: string, password: string) => Promise<boolean>;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<boolean>;
-  authControl: () => Promise<boolean>;
-  signUpMobile: (email: string, password: string) => Promise<boolean>;
-  loginMobile: (email: string, password: string) => Promise<boolean>;
-  logoutMobile: () => Promise<boolean>;
-  authControlMobile: () => Promise<boolean>;
+  signUp: (
+    email: string,
+    password: string,
+    auth?: Auth,
+    type?: "mobile" | "web"
+  ) => Promise<boolean>;
+  login: (
+    email: string,
+    password: string,
+    auth?: Auth,
+    type?: "mobile" | "web"
+  ) => Promise<boolean>;
+  logout: (auth?: Auth) => Promise<boolean>;
+  authControl: (auth?: Auth) => Promise<boolean>;
+  createUser: (user: IUser) => Promise<void>;
+  getUser: (userId: string) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
   user: null,
 
-  signUp: async (email: string, password: string) => {
-    const auth = getAuth();
+  signUp: async (email, password, auth = getAuth(), type = "web") => {
+    const { createUser } = get();
     try {
-      await setPersistence(auth, browserSessionPersistence);
-      await createUserWithEmailAndPassword(auth, email, password);
+      if (type === "web") {
+        await setPersistence(auth, browserSessionPersistence);
+      }
+      await createUserWithEmailAndPassword(auth, email, password).then(
+        (userCredential) => {
+          createUser(new User({ email: email, id: userCredential.user.uid }));
+        }
+      );
       return true;
     } catch (error: any) {
       const errorCode = error.code;
@@ -40,11 +57,17 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  login: async (email: string, password: string) => {
-    const auth = getAuth();
+  login: async (email, password, auth = getAuth(), type = "web") => {
+    const { getUser } = get();
     try {
-      await setPersistence(auth, browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      if (type === "web") {
+        await setPersistence(auth, browserSessionPersistence);
+      }
+      await signInWithEmailAndPassword(auth, email, password).then(
+        (userCredential) => {
+          getUser(userCredential.user.uid);
+        }
+      );
       return true;
     } catch (error: any) {
       const errorCode = error.code;
@@ -54,10 +77,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  logout: async () => {
-    const auth = getAuth();
+  logout: async (auth = getAuth()) => {
     try {
       await signOut(auth);
+      set(() => ({ user: null }));
       return true;
     } catch (error) {
       console.error("Error during logout:", error);
@@ -65,11 +88,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  authControl: async () => {
-    const auth = getAuth();
+  authControl: async (auth = getAuth()) => {
     return new Promise<boolean>((resolve) => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
+      onAuthStateChanged(auth, (_user) => {
+        if (_user) {
           resolve(true);
         } else {
           resolve(false);
@@ -78,49 +100,20 @@ export const useUserStore = create<UserState>((set, get) => ({
     });
   },
 
-  signUpMobile: async (email: string, password: string) => {
-    try {
-      await createUserWithEmailAndPassword(mobileAuth, email, password);
-      return true;
-    } catch (error: any) {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log(errorCode, errorMessage);
-      return false;
-    }
-  },
-
-  loginMobile: async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(mobileAuth, email, password);
-      return true;
-    } catch (error: any) {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log(errorCode, errorMessage);
-      return false;
-    }
-  },
-
-  logoutMobile: async () => {
-    try {
-      await signOut(mobileAuth);
-      return true;
-    } catch (error) {
-      console.error("Error during logout:", error);
-      return false;
-    }
-  },
-
-  authControlMobile: async () => {
-    return new Promise<boolean>((resolve) => {
-      onAuthStateChanged(mobileAuth, (user) => {
-        if (user) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      });
+  createUser: async (user) => {
+    const userRef = doc(db, "users", user.id);
+    await setDoc(userRef, {
+      fullName: user.fullName,
+      email: user.email,
+      createdAt: new Date(),
     });
+    set(() => ({ user: user }));
+  },
+
+  getUser: async (userId) => {
+    const docSnap = await getDoc(doc(db, "users", userId));
+    if (docSnap.exists()) {
+      set(() => ({ user: new User({...docSnap.data(), id: userId}) }));
+    }
   },
 }));
