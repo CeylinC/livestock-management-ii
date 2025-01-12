@@ -5,7 +5,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UploadOutlined,
-  UserOutlined,
+  HomeOutlined,
+  SettingOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
 import { Button, Layout, Menu, theme } from "antd";
@@ -33,7 +34,7 @@ const { Header, Sider, Content } = Layout;
 const navbarList = [
   {
     key: "1",
-    icon: <UserOutlined />,
+    icon: <HomeOutlined />,
     label: <Link href={"/dashboard"}>Anasayfa</Link>,
   },
   {
@@ -56,6 +57,11 @@ const navbarList = [
     icon: <UploadOutlined />,
     label: <Link href={"/dashboard/stocks"}>Stoklar</Link>,
   },
+  {
+    key: "6",
+    icon: <SettingOutlined />,
+    label: <Link href={"/dashboard/settings"}>Ayarlar</Link>,
+  },
 ];
 
 export default function DashboardLayout({
@@ -63,7 +69,7 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { authControl, logout, user, getUser } = useUserStore();
+  const { authControl, user, getUser } = useUserStore();
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -90,31 +96,15 @@ export default function DashboardLayout({
     control();
   }, []);
 
-  const handleLogout = async () => {
-    if (await logout()) {
-      router.push("/login");
-    }
-  };
-
   return (
     <Layout>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="demo-logo-vertical flex flex-col h-full justify-between">
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={[findKeyByHref(pathname)]}
-            items={navbarList}
-          />
-          <Button
-            className="flex flex-row justify-start m-1 pl-6 pr-4 border-0"
-            color="danger"
-            variant="link"
-            onClick={handleLogout}
-          >
-            Çıkış Yap
-          </Button>
-        </div>
+        <Menu
+          theme="dark"
+          mode="inline"
+          defaultSelectedKeys={[findKeyByHref(pathname)]}
+          items={navbarList}
+        />
       </Sider>
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>

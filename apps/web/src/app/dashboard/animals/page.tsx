@@ -56,7 +56,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="w-full h-screen flex items-center flex-col">
+    <div className="w-full min-h-[calc(100vh_-_160px)] flex items-center flex-col">
       <h1>Hayvanlar</h1>
       <Button onClick={handleCreateData}>Hayvan Ekle</Button>
       <AddAnimal isOpen={isAddOpen} setIsOpen={setIsAddOpen} data={selectedData} />
