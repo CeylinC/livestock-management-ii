@@ -6,23 +6,15 @@ import { useUserStore } from "@packages/shared/stores";
 import { mobileAuth } from "../_layout";
 import { styles } from "@/assets/style/tabs";
 
-export default function SignupScreen() {
-  const { signUp } = useUserStore();
+export default function ForgetPasswordScreen() {
+  const { resetPassword } = useUserStore();
   const [form] = Form.useForm();
 
   const onSubmit = async () => {
     const values = form.getFieldsValue();
-    if (values.username && values.password && values.email) {
-      if (
-        await signUp(
-          values.username,
-          values.password,
-          values.fullName,
-          mobileAuth,
-          "mobile"
-        )
-      ) {
-        router.push("/(tabs)");
+    if (values.email) {
+      if (await resetPassword(values.email)) {
+        router.push("/(auth)/login");
       }
     }
     console.log("Success");
@@ -30,15 +22,8 @@ export default function SignupScreen() {
 
   return (
     <ScrollView keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Üye Ol</Text>
-      <Form name="signup">
-        <Form.Item
-          label="Kullanıcı Adı"
-          name="fullName"
-          rules={[{ required: true, message: "Please input your full name!" }]}
-        >
-          <Input />
-        </Form.Item>
+      <Text style={styles.title}>Şifremi Unuttum</Text>
+      <Form name="forgetPassword" form={form}>
         <Form.Item
           label="Email"
           name="email"
@@ -47,22 +32,14 @@ export default function SignupScreen() {
           <Input />
         </Form.Item>
 
-        <Form.Item
-          label="Şifre"
-          name="password"
-          rules={[{ required: true, message: "Please input your password!" }]}
-        >
-          <Input type="password" />
-        </Form.Item>
-
         <Form.Item>
           <Button type="primary" onPress={onSubmit}>
-            Üye Ol
+            Şifremi Unuttum
           </Button>
         </Form.Item>
         <Form.Item>
           <Button type="ghost" onPress={() => router.push("/(auth)/login")}>
-            Giriş Yap
+            İptal
           </Button>
         </Form.Item>
       </Form>

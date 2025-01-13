@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
   signOut,
@@ -33,6 +34,7 @@ interface UserState {
   authControl: (auth?: Auth) => Promise<boolean>;
   createUser: (user: IUser) => Promise<void>;
   getUser: (userId: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   saveUser: (user: IUser) => Promise<void>;
 }
 
@@ -116,6 +118,17 @@ export const useUserStore = create<UserState>((set, get) => ({
     const docSnap = await getDoc(doc(db, "users", userId));
     if (docSnap.exists()) {
       set(() => ({ user: new User({ ...docSnap.data(), id: userId }) }));
+    }
+  },
+
+  resetPassword: async (email) => {
+    const auth = getAuth();
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
   },
 

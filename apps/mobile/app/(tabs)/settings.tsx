@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { mobileAuth } from "../_layout";
 import { useState } from "react";
+import { styles } from "@/assets/style/tabs";
 
 export default function HomeScreen() {
   const { logout, user, saveUser } = useUserStore();
@@ -23,41 +24,33 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Ayarlar</Text>
       <ScrollView>
         <List renderHeader="Kullanıcı Adı">
-          <List.Item>
+          <List.Item
+            extra={
+              <Button
+                type="primary"
+                onPress={() => {
+                  if (user && fullName) {
+                    saveUser({ ...user, fullName: fullName });
+                  }
+                }}
+              >
+                Kaydet
+              </Button>
+            }
+          >
             <Input
               defaultValue={fullName}
               onChangeText={(event) => setFullName(event)}
             />
           </List.Item>
-          <List.Item>
-            <Button
-              type="primary"
-              onPress={() => {
-                if (user && fullName) {
-                  saveUser({ ...user, fullName: fullName });
-                }
-              }}
-            >
-              Kaydet
-            </Button>
-          </List.Item>
         </List>
-        <Button onPress={_logout}>
-          <Text>Logout</Text>
+        <Button onPress={_logout} type="warning">
+          <Text>Çıkış Yap</Text>
         </Button>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: StatusBar.currentHeight,
-  },
-  text: {
-    padding: 12,
-  },
-});
