@@ -4,7 +4,7 @@ import { useUserStore } from "@packages/shared/stores";
 import { useRouter } from "next/navigation";
 
 type FieldType = {
-  username?: string;
+  email?: string;
   password?: string;
 };
 
@@ -17,8 +17,8 @@ export default function Login() {
   const router = useRouter();
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
-    if (values.username && values.password) {
-      if (await login(values.username, values.password)) {
+    if (values.email && values.password) {
+      if (await login(values.email, values.password)) {
         router.push("/dashboard");
       }
     }
@@ -27,7 +27,7 @@ export default function Login() {
 
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center">
-      <h1>Login</h1>
+      <h1>Kayıt Ol</h1>
       <Form
         name="basic"
         labelCol={{ span: 8 }}
@@ -35,14 +35,13 @@ export default function Login() {
         style={{ maxWidth: 600 }}
         initialValues={{ remember: true }}
         onFinish={onFinish}
-
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item<FieldType>
-          label="Username"
-          name="username"
-          rules={[{ required: true, message: "Please input your username!" }]}
+          label="Email"
+          name="email"
+          rules={[{ required: true, message: "Please input your email!" }]}
         >
           <Input />
         </Form.Item>
@@ -56,7 +55,9 @@ export default function Login() {
         </Form.Item>
 
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-          <Button type="primary" htmlType="submit">Submit</Button>
+          <Button type="primary" htmlType="submit">
+            Kayıt Ol
+          </Button>
         </Form.Item>
       </Form>
     </div>

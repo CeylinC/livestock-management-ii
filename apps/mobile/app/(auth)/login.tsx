@@ -27,13 +27,13 @@ export default function LoginScreen() {
 
   return (
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Text>Login</Text>
+        <Text>Kayıt Ol</Text>
         <Form
           name="basic"
           form={form}
       >
         <Form.Item
-          label="Username"
+          label="Email"
           name="username"
           rules={[{ required: true, message: "Please input your username!" }]}
         >
@@ -52,6 +52,7 @@ export default function LoginScreen() {
           <Button type="primary" onPress={onSubmit}>Submit</Button>
         </Form.Item>
       </Form>
+      <Button type="primary" onPress={() => router.push("/(auth)/signup")}>Signup</Button>
       </ScrollView>
   );
 }
