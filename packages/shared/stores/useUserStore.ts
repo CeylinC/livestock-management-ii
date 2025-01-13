@@ -19,6 +19,7 @@ interface UserState {
   signUp: (
     email: string,
     password: string,
+    fullName: string,
     auth?: Auth,
     type?: "mobile" | "web"
   ) => Promise<boolean>;
@@ -37,7 +38,7 @@ interface UserState {
 export const useUserStore = create<UserState>((set, get) => ({
   user: null,
 
-  signUp: async (email, password, auth = getAuth(), type = "web") => {
+  signUp: async (email, password, fullName, auth = getAuth(), type = "web") => {
     const { createUser } = get();
     try {
       if (type === "web") {
