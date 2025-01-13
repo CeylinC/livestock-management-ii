@@ -11,7 +11,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { db } from "../services/firebase/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { User } from "../classes/User";
 
 interface UserState {
@@ -33,6 +33,7 @@ interface UserState {
   authControl: (auth?: Auth) => Promise<boolean>;
   createUser: (user: IUser) => Promise<void>;
   getUser: (userId: string) => Promise<void>;
+  saveUser: (user: IUser) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -114,7 +115,19 @@ export const useUserStore = create<UserState>((set, get) => ({
   getUser: async (userId) => {
     const docSnap = await getDoc(doc(db, "users", userId));
     if (docSnap.exists()) {
-      set(() => ({ user: new User({...docSnap.data(), id: userId}) }));
+      set(() => ({ user: new User({ ...docSnap.data(), id: userId }) }));
     }
+  },
+
+  saveUser: async (user) => {
+    const docRef = doc(db, "users", user.id);
+
+    await updateDoc(docRef, {
+      fullName: user.fullName,
+    });
+
+    set(() => ({
+      user: user,
+    }));
   },
 }));
