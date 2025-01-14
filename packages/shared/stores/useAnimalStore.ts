@@ -12,6 +12,7 @@ import {
   query,
   startAfter,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { Animal } from "../classes";
 
@@ -27,6 +28,8 @@ interface AnimalState {
   updateAnimal: (animal: IAnimal, uid: string) => void;
   deleteAnimal: (animalId: string, uid: string) => void;
   selectAnimal: (animal: IAnimal | null) => void;
+  getTotalCount: (uid: string) => Promise<boolean>;
+  getCategorizedDataCount: (uid: string, type: string) => Promise<null | number>;
 }
 
 export const useAnimalStore = create<AnimalState>((set, get) => ({
@@ -47,9 +50,11 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
   },
 
   fetchInitialData: async (pageSize, uid) => {
+    const { getTotalCount } = get();
     const temp: IAnimal[] | null = [];
-    const ss = await getDocs(collection(doc(db, "users", uid), "animals"));
     let lastDataCreateAt: any;
+
+    await getTotalCount(uid);
 
     const q = query(
       collection(doc(db, "users", uid), "animals"),
@@ -63,7 +68,6 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     });
 
     set(() => ({
-      totalCount: ss.size,
       animals: temp,
       lastData: lastDataCreateAt,
     }));
@@ -146,5 +150,29 @@ export const useAnimalStore = create<AnimalState>((set, get) => ({
     set(() => ({
       selectedAnimal: animal,
     }));
+  },
+
+  getTotalCount: async (uid) => {
+    try {
+      const ss = await getDocs(collection(doc(db, "users", uid), "animals"));
+      set(() => ({ totalCount: ss.size }));
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  },
+
+  getCategorizedDataCount: async (uid, type) => {
+    const ss = collection(doc(db, "users", uid), "animals");
+    const q = query(ss, where("gender", "==", type));
+
+    try{
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.size;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   },
 }));

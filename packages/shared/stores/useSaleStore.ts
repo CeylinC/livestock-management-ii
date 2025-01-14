@@ -11,6 +11,7 @@ import {
   query,
   startAfter,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../services/firebase/firebase";
 import { Sale } from "../classes";
@@ -27,6 +28,8 @@ interface SaleState {
   updateSale: (sale: ISale, uid: string) => void;
   deleteSale: (saleId: string, uid: string) => void;
   selectSale: (sale: ISale | null) => void;
+  getTotalCount: (uid: string) => Promise<boolean>;
+  getCategorizedDataCount: (uid: string, type: string) => Promise<null | number>;
 }
 
 export const useSaleStore = create<SaleState>((set, get) => ({
@@ -47,9 +50,11 @@ export const useSaleStore = create<SaleState>((set, get) => ({
   },
 
   fetchInitialData: async (pageSize, uid) => {
+    const { getTotalCount } = get();
     const temp: ISale[] | null = [];
-    const ss = await getDocs(collection(doc(db, "users", uid), "sales"));
     let lastDataCreateAt: any;
+
+    await getTotalCount(uid);
 
     const q = query(
       collection(doc(db, "users", uid), "sales"),
@@ -63,7 +68,6 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     });
 
     set(() => ({
-      totalCount: ss.size,
       sales: temp,
       lastData: lastDataCreateAt,
     }));
@@ -151,4 +155,28 @@ export const useSaleStore = create<SaleState>((set, get) => ({
       selectedSale: sale,
     }));
   },
+  
+    getTotalCount: async (uid) => {
+      try {
+        const ss = await getDocs(collection(doc(db, "users", uid), "sales"));
+        set(() => ({ totalCount: ss.size }));
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+  
+    getCategorizedDataCount: async (uid, type) => {
+      const ss = collection(doc(db, "users", uid), "sales");
+      const q = query(ss, where("category", "==", type));
+  
+      try{
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.size;
+      } catch (error) {
+        console.log(error);
+        return null;
+      }
+    },
 }));

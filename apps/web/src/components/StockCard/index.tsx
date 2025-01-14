@@ -1,22 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { Card } from "antd";
 
-export default function StockCard() {
-  const [loading, setLoading] = useState<boolean>(true);
+interface IProp{
+  title: string;
+  subtitle: string;
+  loading: boolean;
+  type: string;
+}
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 5000);
-  }, []);
+export default function StockCard({title, subtitle, loading, type}: IProp) {
 
   return (
-    <Card loading={loading} className="m-1 w-72">
+    <Card loading={loading} className="min-w-[100px]">
       <Card.Meta
-        title="Card title"
+        title={<div className="text-3xl">{title} <span className="text-xl">{type}</span></div>}
         description={
           <>
-            <p>This is the description</p>
+            <p>{subtitle}</p>
           </>
         }
       />

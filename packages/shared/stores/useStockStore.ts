@@ -11,6 +11,7 @@ import {
   limit,
   startAfter,
   collection,
+  where,
 } from "firebase/firestore";
 import { db } from "../services/firebase/firebase";
 import { Stock } from "../classes";
@@ -27,6 +28,8 @@ interface StockState {
   updateStock: (stock: IStock, uid: string) => void;
   deleteStock: (stockId: string, uid: string) => void;
   selectStock: (stock: IStock | null) => void;
+  getTotalCount: (uid: string) => Promise<boolean>;
+  getCategorizedDataCount: (uid: string, type: string) => Promise<null | number>;
 }
 
 export const useStockStore = create<StockState>((set, get) => ({
@@ -47,9 +50,11 @@ export const useStockStore = create<StockState>((set, get) => ({
   },
 
   fetchInitialData: async (pageSize, uid) => {
+    const { getTotalCount } = get();
     const temp: IStock[] | null = [];
-    const ss = await getDocs(collection(doc(db, "users", uid), "stocks"));
     let lastDataCreateAt: any;
+
+    await getTotalCount(uid);
 
     const q = query(
       collection(doc(db, "users", uid), "stocks"),
@@ -63,7 +68,6 @@ export const useStockStore = create<StockState>((set, get) => ({
     });
 
     set(() => ({
-      totalCount: ss.size,
       stocks: temp,
       lastData: lastDataCreateAt,
     }));
@@ -141,4 +145,28 @@ export const useStockStore = create<StockState>((set, get) => ({
       selectedStock: stock,
     }));
   },
+  
+    getTotalCount: async (uid) => {
+      try {
+        const ss = await getDocs(collection(doc(db, "users", uid), "stocks"));
+        set(() => ({ totalCount: ss.size }));
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+  
+    getCategorizedDataCount: async (uid, type) => {
+      const ss = collection(doc(db, "users", uid), "stocks");
+      const q = query(ss, where("category", "==", type));
+  
+      try{
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.size;
+      } catch (error) {
+        console.log(error);
+        return null;
+      }
+    },
 }));

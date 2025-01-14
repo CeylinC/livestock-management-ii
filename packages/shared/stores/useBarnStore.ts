@@ -9,6 +9,7 @@ import {
   query,
   startAfter,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { IBarn } from "../models/IBarn";
 import { create } from "zustand";
@@ -27,6 +28,8 @@ interface BarnState {
   updateBarn: (barn: IBarn, uid: string) => void;
   deleteBarn: (barnId: string, uid: string) => void;
   selectBarn: (barn: IBarn | null) => void;
+  getTotalCount: (uid: string) => Promise<boolean>;
+  getCategorizedDataCount: (uid: string, type: string) => Promise<null | number>;
 }
 
 export const useBarnStore = create<BarnState>((set, get) => ({
@@ -47,9 +50,11 @@ export const useBarnStore = create<BarnState>((set, get) => ({
   },
 
   fetchInitialData: async (pageSize, uid) => {
+    const { getTotalCount } = get();
     const temp: IBarn[] | null = [];
-    const ss = await getDocs(collection(doc(db, "users", uid), "barns"));
     let lastDataCreateAt: any;
+
+    await getTotalCount(uid);
 
     const q = query(
       collection(doc(db, "users", uid), "barns"),
@@ -63,7 +68,6 @@ export const useBarnStore = create<BarnState>((set, get) => ({
     });
 
     set(() => ({
-      totalCount: ss.size,
       barns: temp,
       lastData: lastDataCreateAt,
     }));
@@ -137,4 +141,29 @@ export const useBarnStore = create<BarnState>((set, get) => ({
       selectedBarn: barn,
     }));
   },
+
+  
+    getTotalCount: async (uid) => {
+      try {
+        const ss = await getDocs(collection(doc(db, "users", uid), "barns"));
+        set(() => ({ totalCount: ss.size }));
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+  
+    getCategorizedDataCount: async (uid, type) => {
+      const ss = collection(doc(db, "users", uid), "barns");
+      const q = query(ss, where("gender", "==", type));
+  
+      try{
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.size;
+      } catch (error) {
+        console.log(error);
+        return null;
+      }
+    },
 }));
